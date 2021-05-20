@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+    # -*- coding: utf-8 -*-
 """
 Created on Thu Apr 29 21:26:23 2021
 
@@ -83,9 +83,9 @@ def RZ(wavefunction, n, phi=0):
         raise TypeError("Index is out of range")
     for i in np.nonzero(amplitude)[0]:
         if states[i][n] == '0':
-            new_amplitude[i] += amplitude[i]
+            new_amplitude[i] += cmath.exp(-1j*phi/2)*amplitude[i]
         else:
-            new_amplitude[i] += cmath.exp(1j*phi)*amplitude[i]  
+            new_amplitude[i] += cmath.exp(1j*phi/2)*amplitude[i]  
     wavefunction.amplitude = new_amplitude
     
 def RY(wavefunction, n, phi=0):
