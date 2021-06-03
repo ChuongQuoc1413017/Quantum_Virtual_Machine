@@ -15,7 +15,6 @@ class Wavefunction(object):
     
     def probabilities(self):
         """returns a dictionary of associated probabilities."""
-#         return np.abs(self.amplitude()) ** 2
         return np.abs(self.amplitude) ** 2
 
     def print_state(self):
