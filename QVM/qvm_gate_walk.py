@@ -115,5 +115,5 @@ def quantum_walk_hadamard(wavefunction, dim, iteration):
         
 def quantum_walk_grover(wavefunction, dim, iteration):
     for i in range(iteration):
-        H_coin(wavefunction, dim)
+        Gover_coin(wavefunction, dim)
         shift_walk(wavefunction, dim)
