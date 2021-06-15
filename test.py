@@ -5,13 +5,13 @@ Created on Thu Apr 29 21:31:34 2021
 @author: ASUS
 """
 
-from qCIT import qcit_circuit
-from qCIT import qcit_gate
+from qCIT import qCircuit
+from qCIT import qBLAS
 
 n = 2
-circuit = qcit_circuit.Qubit(n)
-qcit_gate.H(circuit, 0)
-qcit_gate.CNOT(circuit, 0, 1)
+circuit = qCircuit.Qubit(n)
+qBLAS.H(circuit, 0)
+qBLAS.CNOT(circuit, 0, 1)
 print(circuit.print_state())
 print()
 print(circuit.measure_sample(10000))
