@@ -1,2 +1,2 @@
-# Quantum_Virtual_Machine
+# Quantum_Simulation_Using_NumPy array
 Simulation of Quantum Computer using Python
