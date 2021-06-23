@@ -23,7 +23,7 @@ def measure_one(wavefunction, n):
     for i in range(2**qubit_num):
         if states[i][n] == '0':
             prob_0 += abs(amplitude[i])**2
-    prob_0 = round(prob_0, 3)
+    prob_0 = round(prob_0, 10)
     return np.array([prob_0, 1 - prob_0])
 
 def collapse_one(wavefunction, n):
