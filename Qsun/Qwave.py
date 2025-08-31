@@ -47,11 +47,13 @@ class Wavefunction(object):
                         b[2*i][j] = 3.5
                     elif ('CCX' in a[j]):
                         b[2*i][j] = 4
+                    elif ('CSWAP' in a[j]):
+                        b[2*i][j] = 5
                     else:
                         b[2*i][j] = 1
 
         for j in range(len(a)):
-            if ('CX' in a[j]) or ('CCX' in a[j]) or ('SWAP' in a[j]):
+            if ('CX' in a[j]) or ('CCX' in a[j]) or ('SWAP' in a[j]) or ('CSWAP' in a[j]):
                 for i in range(2*min(a[j][:-1])+1, 2*max(a[j][:-1]), 2):
                     b[i][j] = 2
             if ('CP' in a[j]) or ('CRX' in a[j]):
@@ -108,6 +110,12 @@ class Wavefunction(object):
                         out += 'o--'
                     elif i == a[j][2]:
                         out += 'x--'
+
+                if b[2*i][j] == 5:
+                    if i == a[j][0] or i == a[j][1]:
+                        out += 'x--'
+                    elif i == a[j][2]:
+                        out += 'o--'
 
 
                 if b[2*i+1][j] == 2:

@@ -283,6 +283,34 @@ def SWAP(wavefunction, target_1, target_2):
             new_amplitude[i] = amplitude[i]
     wavefunction.amplitude = new_amplitude
     (wavefunction.visual).append([target_1, target_2, 'SWAP'])
+
+def CSWAP(wavefunction, control, target_1, target_2):
+    """CSwap gate"""
+    states = wavefunction.state
+    amplitude = wavefunction.amplitude
+    qubit_num = len(states[0])
+    new_amplitude = np.zeros(2**qubit_num, dtype = complex)
+    minimum = target_2 ^ ((target_1 ^ target_2) & -(target_1 < target_2))
+    maximum = target_1 ^ ((target_1 ^ target_2) & -(target_1 < target_2)) 
+    cut = 2**(qubit_num-minimum-1) - 2**(qubit_num-maximum-1)
+    if control == target_1 or control == target_2 or target_1 == target_2:
+        raise TypeError("Control qubit and target qubit must be distinct")
+    for i in range(2**qubit_num):
+        if states[i][control] == '1':
+            if states[i][target_1] != states[i][target_2]:
+                if int(states[i][maximum]) > int(states[i][minimum]):
+    #                 print(states[i], 'to', states[i+cut])
+                    new_amplitude[i+cut] += amplitude[i]                              
+                else:
+    #                 print(states[i], 'to', states[i-cut])
+                    new_amplitude[i-cut] += amplitude[i]
+            else:
+    #                 print(states[i], 'to', states[i])
+                new_amplitude[i] = amplitude[i]
+        else:
+            new_amplitude[i] = amplitude[i]
+    wavefunction.amplitude = new_amplitude
+    (wavefunction.visual).append([target_1, target_2, control, 'CSWAP'])
     
 def E(wavefunction, p, n):
     """Quantum depolarizing channel"""
