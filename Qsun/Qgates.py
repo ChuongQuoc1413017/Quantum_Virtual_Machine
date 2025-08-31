@@ -8,7 +8,7 @@ import numpy as np
 import cmath
 
 def H(wavefunction, n):
-    """Hadamard gate: math:`\frac{1}{\sqrt{2}} \begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix}`"""
+    """Hadamard gate"""
     states = wavefunction.state
     amplitude = wavefunction.amplitude
     qubit_num = len(states[0])
@@ -27,7 +27,7 @@ def H(wavefunction, n):
     (wavefunction.visual).append([n, 'H'])
     
 def X(wavefunction, n):
-    """Pauli-X: math:`\begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}`"""
+    """Pauli-X"""
     states = wavefunction.state
     amplitude = wavefunction.amplitude
     qubit_num = len(states[0])
@@ -44,7 +44,7 @@ def X(wavefunction, n):
     (wavefunction.visual).append([n, 'X'])
     
 def Y(wavefunction, n):
-    """Pauli-Y: math:`\begin{pmatrix} 0 & -i \\ i & 0 \end{pmatrix}`"""
+    """Pauli-Y"""
     states = wavefunction.state
     amplitude = wavefunction.amplitude
     qubit_num = len(states[0])
@@ -61,7 +61,7 @@ def Y(wavefunction, n):
     (wavefunction.visual).append([n, 'Y'])
     
 def Z(wavefunction, n):
-    """Pauli-Z: math:`\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}`"""
+    """Pauli-Z"""
     states = wavefunction.state
     amplitude = wavefunction.amplitude
     qubit_num = len(states[0])
@@ -77,7 +77,7 @@ def Z(wavefunction, n):
     (wavefunction.visual).append([n, 'Z'])
     
 def RX(wavefunction, n, phi=0):
-    """PHASE gate: math:`\begin{pmatrix} cos(phi/2) & -sin(phi/2) \\ sin(phi/2) & cos(phi/2) \end{pmatrix}`"""
+    """Rotation around X-axis gate"""
     states = wavefunction.state
     amplitude = wavefunction.amplitude
     qubit_num = len(states[0])
@@ -96,7 +96,7 @@ def RX(wavefunction, n, phi=0):
     (wavefunction.visual).append([n, 'RX', '0'])
     
 def RY(wavefunction, n, phi=0):
-    """PHASE gate: math:`\begin{pmatrix} cos(phi/2) & -sin(phi/2) \\ sin(phi/2) & cos(phi/2) \end{pmatrix}`"""
+    """Rotation around Y-axis gate"""
     states = wavefunction.state
     amplitude = wavefunction.amplitude
     qubit_num = len(states[0])
@@ -115,7 +115,7 @@ def RY(wavefunction, n, phi=0):
     (wavefunction.visual).append([n, 'RY', '0'])
     
 def RZ(wavefunction, n, phi=0):
-    """PHASE gate: math:`\begin{pmatrix} 1 & 0 \\ 0 & e^{i \phi} \end{pmatrix}`"""
+    """Rotation around Z-axis gate"""
     states = wavefunction.state
     amplitude = wavefunction.amplitude
     qubit_num = len(states[0])
@@ -131,7 +131,7 @@ def RZ(wavefunction, n, phi=0):
     (wavefunction.visual).append([n, 'RZ', '0'])
     
 def Phase(wavefunction, n, phi=0):
-    """PHASE gate: math:`\begin{pmatrix} 1 & 0 \\ 0 & e^{i \phi} \end{pmatrix}`"""
+    """PHASE gate"""
     states = wavefunction.state
     amplitude = wavefunction.amplitude
     qubit_num = len(states[0])
@@ -147,12 +147,12 @@ def Phase(wavefunction, n, phi=0):
 #     (wavefunction.visual).append([n, 'P', phi])
     
 def S(wavefunction, n):
-    """Phase(pi/2): math:`\begin{pmatrix} 1 & 0 \\ 0 & i \end{pmatrix}`"""
+    """Phase(pi/2)"""
     Phase(wavefunction, n , cmath.pi/2)
     (wavefunction.visual).append([n, 'S'])
     
 def T(wavefunction, n):
-    """Phase(pi/4): math:`\begin{pmatrix} 1 & 0 \\ 0 & e^{i \pi / 4} \end{pmatrix}`"""
+    """Phase(pi/4)"""
     Phase(wavefunction, n , cmath.pi/4)
     (wavefunction.visual).append([n, 'T'])
     
@@ -175,9 +175,7 @@ def Xsquare(wavefunction, n):
     (wavefunction.visual).append([n, 'XS'])
     
 def CNOT(wavefunction, control, target):
-    """Flip target if control is |1>: 
-    math:`P_0 \otimes I + P_1 \otimes X = \begin{pmatrix} 1&0&0&0 \\ 0&1&0&0 \\
-                                            0&0&0&1 \\ 0&0&1&0 \end{pmatrix}`"""
+    """Flip target if control is |1>"""
     states = wavefunction.state
     amplitude = wavefunction.amplitude
     qubit_num = len(states[0])
@@ -198,7 +196,7 @@ def CNOT(wavefunction, control, target):
     (wavefunction.visual).append([control, target, 'CX'])
     
 def CPhase(wavefunction, control, target, phi=0):
-    """Controlled PHASE gate: math:`\text{diag}(1, 1, 1, e^{i \phi})`"""
+    """Controlled PHASE gate"""
     states = wavefunction.state
     amplitude = wavefunction.amplitude
     qubit_num = len(states[0])
@@ -217,9 +215,7 @@ def CPhase(wavefunction, control, target, phi=0):
     (wavefunction.visual).append([control, target, 'CP', '0'])
     
 def CCNOT(wavefunction, control_1, control_2, target):
-    """CCNOT - double-controlled-X
-    :math:`P_0 \otimes P_0 \otimes I + P_0 \otimes P_1 \otimes I + P_1 \otimes P_0 \otimes I
-                                     + P_1 \otimes P_1 \otimes X`"""
+    """CCNOT - double-controlled-X"""
     states = wavefunction.state
     amplitude = wavefunction.amplitude
     qubit_num = len(states[0])
@@ -239,9 +235,7 @@ def CCNOT(wavefunction, control_1, control_2, target):
     (wavefunction.visual).append([control_1, control_2, target, 'CCX'])
     
 def OR(wavefunction, control_1, control_2, target):
-    """CCNOT - double-controlled-X
-    :math:`P_0 \otimes P_0 \otimes I + P_0 \otimes P_1 \otimes I + P_1 \otimes P_0 \otimes I
-                                     + P_1 \otimes P_1 \otimes X`"""
+    """CCNOT - double-controlled-X"""
     states = wavefunction.state
     amplitude = wavefunction.amplitude
     qubit_num = len(states[0])
@@ -260,7 +254,7 @@ def OR(wavefunction, control_1, control_2, target):
     wavefunction.amplitude = new_amplitude
     
 def SWAP(wavefunction, target_1, target_2):
-    """Swap gate: math:`\begin{pmatrix} 1&0&0&0 \\ 0&0&1&0 \\ 0&1&0&0 \\ 0&0&0&1 \end{pmatrix}`"""
+    """Swap gate"""
     states = wavefunction.state
     amplitude = wavefunction.amplitude
     qubit_num = len(states[0])
