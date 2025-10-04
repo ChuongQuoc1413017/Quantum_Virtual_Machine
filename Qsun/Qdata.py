@@ -13,9 +13,9 @@ def intrinsic_dim_from_cov(X):
     eigvals = np.linalg.eigvalsh(cov)[::-1]
     return ((eigvals.sum())**2) / ((eigvals**2).sum())
 
-def sepctral_complex_kernel(K, lambda_K = 0.1):
+def sepctral_complex_kernel(Kernel, lambda_K = 0.1):
     '''Return the Spectral Complexity of Kernel Matrix'''
-    return np.trace(K @ np.linalg.inv(K + lambda_K * np.identity(K.shape[0])))
+    return np.trace(Kernel @ np.linalg.inv(Kernel + lambda_K * np.identity(Kernel.shape[0])))
 
 def kolmogorov_complex(X):
     '''Return the estimated Kolmogorov complexity of a dataset'''
