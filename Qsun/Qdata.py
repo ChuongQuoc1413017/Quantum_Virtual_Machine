@@ -7,9 +7,9 @@ Created on Thu Jun 29 11:30:23 2021
 import numpy as np
 import math
 
-def intrinsic_dim_from_cov(X):
+def intrinsic_dim_from_cov(dataset):
     '''Return the estimated Intrinsic Dimension using the spectrum of the covariance matrix'''
-    cov = np.cov(X, rowvar=False)
+    cov = np.cov(dataset, rowvar=False)
     eigvals = np.linalg.eigvalsh(cov)[::-1]
     return ((eigvals.sum())**2) / ((eigvals**2).sum())
 
@@ -17,7 +17,7 @@ def sepctral_complex_kernel(Kernel, lambda_K = 0.1):
     '''Return the Spectral Complexity of Kernel Matrix'''
     return np.trace(Kernel @ np.linalg.inv(Kernel + lambda_K * np.identity(Kernel.shape[0])))
 
-def kolmogorov_complex(X):
+def kolmogorov_complex(dataset):
     '''Return the estimated Kolmogorov complexity of a dataset'''
     import zlib, gzip, lzma, bz2
     
@@ -43,7 +43,7 @@ def kolmogorov_complex(X):
             raise ValueError("Unknown alg")
         return len(out)
     
-    b = serialize_array(X)
+    b = serialize_array(dataset)
     sizes = {}
     algs=('zlib', 'gzip', 'lzma', 'bz2')
     for a in algs:
