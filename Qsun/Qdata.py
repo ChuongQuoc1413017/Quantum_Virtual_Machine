@@ -18,7 +18,7 @@ def sepctral_complex_kernel(kernel, lambda_K = 0.1):
     return np.trace(kernel @ np.linalg.inv(kernel + lambda_K * np.identity(kernel.shape[0])))
 
 def kolmogorov_complex(dataset):
-    '''Return the estimated Kolmogorov complexity of a dataset'''
+    '''Return the estimated Kolmogorov complexity of the dataset'''
     import zlib, gzip, lzma, bz2
     
     def serialize_array(X):
