@@ -49,3 +49,48 @@ def collapse_one(wavefunction, n):
             if states[i][n] == '1':
                 new_amplitude[i] = amplitude[i]/math.sqrt(1 - prob_0)
     wavefunction.amplitude = new_amplitude
+
+""" 
+Updated on Tuesday Oct 14, 2025
+"""
+def pauli_expectation(wavefunction, qubit_idx, pauli_type):
+    """
+    Measure expectation value of Pauli operator on a specific qubit
+    pauli_type: 'X', 'Y', or 'Z'
+    """
+    states = wavefunction.state
+    amplitude = wavefunction.amplitude
+    qubit_num = len(states[0])
+    
+    if qubit_idx >= qubit_num or qubit_idx < 0:
+        raise TypeError("Index is out of range")
+    
+    expectation = 0.0
+    
+    if pauli_type == 'X':
+        # <X> = sum of amplitude[i]*conj(amplitude[j]) where state[i] and state[j] differ at qubit_idx
+        cut = 2**(qubit_num - qubit_idx - 1)
+        for i in range(2**qubit_num):
+            if states[i][qubit_idx] == '0':
+                # <i|X|j> where j is i with flipped bit at qubit_idx
+                j = i + cut
+                expectation += 2 * np.real(np.conj(amplitude[i]) * amplitude[j])
+    
+    elif pauli_type == 'Y':
+        # <Y> similar to X but with imaginary component
+        cut = 2**(qubit_num - qubit_idx - 1)
+        for i in range(2**qubit_num):
+            if states[i][qubit_idx] == '0':
+                j = i + cut
+                expectation += 2 * np.real(-1j * np.conj(amplitude[i]) * amplitude[j])
+    
+    elif pauli_type == 'Z':
+        # <Z> = P(|0>) - P(|1>)
+        for i in range(2**qubit_num):
+            prob = abs(amplitude[i])**2
+            if states[i][qubit_idx] == '0':
+                expectation += prob
+            else:
+                expectation -= prob
+    
+    return expectation
