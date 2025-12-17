@@ -129,7 +129,81 @@ def RZ(wavefunction, n, phi=0):
             new_amplitude[i] += cmath.exp(1j*phi/2)*amplitude[i]  
     wavefunction.amplitude = new_amplitude
     (wavefunction.visual).append([n, 'RZ', '0'])
-    
+""" 
+
+Updated on Tuesday Oct 14, 2025
+
+"""
+def CRX(wavefunction, control, target, phi=0):
+    """ Controlled RX gate - implements controlled rotation around X-axis."""
+    states = wavefunction.state
+    amplitude = wavefunction.amplitude
+    qubit_num = len(states[0])
+    new_amplitude = np.zeros(2**qubit_num, dtype=complex)
+    cut = 2**(qubit_num-target-1)
+    if control >= qubit_num or control < 0 or target >= qubit_num or target < 0:
+        raise TypeError("Index is out of range.")
+    if control == target:
+        raise TypeError("Control qubit and target qubit must be distinct.")
+    for i in np.nonzero(amplitude)[0]:
+        if states[i][control] == '1':
+            if states[i][target] == '0':
+                new_amplitude[i] += cmath.cos(phi/2)*amplitude[i]
+                new_amplitude[i+cut] -= 1j*cmath.sin(phi/2)*amplitude[i]
+            else:
+                new_amplitude[i] += cmath.cos(phi/2)*amplitude[i]
+                new_amplitude[i-cut] -= 1j*cmath.sin(phi/2)*amplitude[i]
+        else:
+            new_amplitude[i] = amplitude[i]
+    wavefunction.amplitude = new_amplitude
+    (wavefunction.visual).append([control, target, 'CRX', '0'])
+
+def CRY(wavefunction, control, target, phi=0):
+    states = wavefunction.state
+    amplitude = wavefunction.amplitude
+    qubit_num = len(states[0])
+    new_amplitude = np.zeros(2**qubit_num, dtype=complex)
+    cut = 2**(qubit_num-target-1)
+    if control >= qubit_num or control < 0 or target >= qubit_num or target < 0:
+        raise TypeError("Index is out of range.")
+    if control == target:
+        raise TypeError("Control qubit and target qubit must be distinct.")
+    for i in np.nonzero(amplitude)[0]:
+        if states[i][control] == '1':
+            if states[i][target] == '0':
+                new_amplitude[i] += cmath.cos(phi/2)*amplitude[i]
+                new_amplitude[i+cut] += cmath.sin(phi/2)*amplitude[i]
+            else:
+                new_amplitude[i] += cmath.cos(phi/2)*amplitude[i]
+                new_amplitude[i-cut] -= cmath.sin(phi/2)*amplitude[i]
+        else:
+            new_amplitude[i] = amplitude[i]
+
+    wavefunction.amplitude = new_amplitude
+    (wavefunction.visual).append([control, target, 'CRY', '0'])
+
+def CRZ(wavefunction, control, target, phi=0):
+    """Controlled RZ gate - implements controlled rotation around Z-axis"""
+    states = wavefunction.state
+    amplitude = wavefunction.amplitude
+    qubit_num = len(states[0])
+    new_amplitude = np.zeros(2**qubit_num, dtype=complex)
+    if control >= qubit_num or control < 0 or target >= qubit_num or target < 0:
+        raise TypeError("Index is out of range")
+    if control == target:
+        raise TypeError("Control qubit and target qubit must be distinct")
+    for i in np.nonzero(amplitude)[0]:
+        if states[i][control] == '1':
+            # Apply RZ rotation on target qubit
+            if states[i][target] == '0':
+                new_amplitude[i] += cmath.exp(-1j*phi/2) * amplitude[i]
+            else:
+                new_amplitude[i] += cmath.exp(1j*phi/2) * amplitude[i]
+        else:
+            new_amplitude[i] = amplitude[i]
+    wavefunction.amplitude = new_amplitude
+    (wavefunction.visual).append([control, target, 'CRZ', '0'])
+
 def Phase(wavefunction, n, phi=0):
     """PHASE gate"""
     states = wavefunction.state
@@ -144,6 +218,7 @@ def Phase(wavefunction, n, phi=0):
         else:
             new_amplitude[i] += cmath.exp(1j*phi)*amplitude[i]  
     wavefunction.amplitude = new_amplitude
+    (wavefunction.visual).append([n, 'P'])
 #     (wavefunction.visual).append([n, 'P', phi])
     
 def S(wavefunction, n):
@@ -305,7 +380,70 @@ def CSWAP(wavefunction, control, target_1, target_2):
             new_amplitude[i] = amplitude[i]
     wavefunction.amplitude = new_amplitude
     (wavefunction.visual).append([target_1, target_2, control, 'CSWAP'])
-    
+""" 
+
+Updated on Sunday Dec 07, 2025
+
+"""
+
+def ISWAP(wavefunction, target_1, target_2):
+    states = wavefunction.state
+    amplitude = wavefunction.amplitude
+    qubit_num = len(states[0])
+    new_amplitude = np.zeros(2**qubit_num, dtype=complex)
+    if target_1 == target_2:
+        raise TypeError("Target qubits must be distinct")
+    minimum = target_2 ^ ((target_1 ^ target_2) & -(target_1 < target_2))
+    maximum = target_1 ^ ((target_1 ^ target_2) & -(target_1 < target_2))
+    cut = 2**(qubit_num-minimum-1) - 2**(qubit_num-maximum-1)
+    dim = 2**qubit_num
+    for i in range(dim):
+        if states[i][target_1] == states[i][target_2]:
+            new_amplitude[i] += amplitude[i]
+        else:
+            if int(states[i][maximum]) > int(states[i][minimum]):
+                j = i + cut
+            else:
+                j = i - cut
+            new_amplitude[j] += 1j * amplitude[i]
+    wavefunction.amplitude = new_amplitude
+    (wavefunction.visual).append([target_1, target_2, 'ISWAP'])
+
+def SISWAP(wavefunction, target_1, target_2):
+    states = wavefunction.state
+    amplitude = wavefunction.amplitude
+    qubit_num = len(states[0])
+    new_amplitude = np.zeros(2**qubit_num, dtype=complex)
+    if target_1 == target_2:
+        raise TypeError("Target qubits must be distinct")
+    minimum = target_2 ^ ((target_1 ^ target_2) & -(target_1 < target_2))
+    maximum = target_1 ^ ((target_1 ^ target_2) & -(target_1 < target_2))
+    cut = 2**(qubit_num-minimum-1) - 2**(qubit_num-maximum-1)
+    dim = 2**qubit_num
+    processed = np.zeros(dim, dtype=bool)  
+    c = 1.0 / np.sqrt(2.0)
+    for i in range(dim):
+        if processed[i]:
+            continue
+        b1 = states[i][target_1]
+        b2 = states[i][target_2]
+        if b1 == b2:
+            new_amplitude[i] = amplitude[i]
+            processed[i] = True
+        else:
+            if int(states[i][maximum]) > int(states[i][minimum]):
+                j = i + cut
+            else:
+                j = i - cut
+            a = amplitude[i]
+            b = amplitude[j]
+            new_amplitude[i] = c * a + 1j * c * b
+            new_amplitude[j] = 1j * c * a + c * b
+            processed[i] = True
+            processed[j] = True
+    wavefunction.amplitude = new_amplitude
+    (wavefunction.visual).append([target_1, target_2, 'SISWAP'])
+
 def E(wavefunction, p, n):
     """Quantum depolarizing channel"""
     states = wavefunction.state
