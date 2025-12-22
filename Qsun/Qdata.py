@@ -54,7 +54,7 @@ def kolmogorov_complex(dataset):
 
 """
 
-Updated on Dec 20th, 2025
+Updated on Saturday Dec 20th, 2025
 
 """
 class PauliZExpectation:
@@ -222,4 +222,73 @@ class ConnectedCorrelator:
         
         return result
     
+"""
+Updated on Sunday Dec 21th, 2025
 
+"""
+class EntanglementEntropy:
+    
+    def __init__(self, wavefunction):
+        self.wavefunction = wavefunction
+        self.n_qubits = len(wavefunction.state[0])
+    
+    def reduced_density_matrix(self, keep_qubits):
+        states = self.wavefunction.state
+        amplitudes = self.wavefunction.amplitude
+        
+        if not all(0 <= q < self.n_qubits for q in keep_qubits):
+            raise ValueError(f"keep_qubits must be in range [0, {self.n_qubits - 1}]")
+        
+        trace_out_qubits = [i for i in range(self.n_qubits) if i not in keep_qubits]
+        dim_reduced = 2 ** len(keep_qubits)
+        reduced_rho = np.zeros((dim_reduced, dim_reduced), dtype=complex)
+        
+        for i in range(len(states)):
+            for j in range(len(states)):
+                state_i = states[i]
+                state_j = states[j]
+                
+                traced_match = all(state_i[q] == state_j[q] for q in trace_out_qubits)
+                if not traced_match:
+                    continue
+                
+                reduced_state_i = ''.join([state_i[q] for q in keep_qubits])
+                reduced_state_j = ''.join([state_j[q] for q in keep_qubits])
+                idx_i = int(reduced_state_i, 2)
+                idx_j = int(reduced_state_j, 2)
+                reduced_rho[idx_i, idx_j] += amplitudes[i] * np.conj(amplitudes[j])
+        
+        return reduced_rho
+    
+    def von_neumann_entropy(self, keep_qubits=None, base=2):
+        if keep_qubits is None:
+            rho = np.outer(self.wavefunction.amplitude, np.conj(self.wavefunction.amplitude))
+        else:
+            rho = self.reduced_density_matrix(keep_qubits)
+        
+        eigenvalues = np.linalg.eigvalsh(rho)
+        eigenvalues = eigenvalues[eigenvalues > 1e-12]
+        
+        if base == 2:
+            entropy = -np.sum(eigenvalues * np.log2(eigenvalues))
+        elif base == np.e:
+            entropy = -np.sum(eigenvalues * np.log(eigenvalues))
+        else:
+            entropy = -np.sum(eigenvalues * np.log(eigenvalues) / np.log(base))
+        
+        return entropy
+    
+    def entanglement_entropy(self, bipartition, base=2):
+        if isinstance(bipartition, tuple) and len(bipartition) == 2:
+            qubits_A, qubits_B = bipartition
+            qubits_A = list(qubits_A)
+        else:
+            qubits_A = list(bipartition)
+            qubits_B = [i for i in range(self.n_qubits) if i not in qubits_A]
+        
+        if len(qubits_A) + len(qubits_B) != self.n_qubits:
+            raise ValueError("Bipartition must cover all qubits exactly once")
+        if set(qubits_A) & set(qubits_B):
+            raise ValueError("qubits_A and qubits_B must be disjoint")
+        
+        return self.von_neumann_entropy(keep_qubits=qubits_A, base=base)
