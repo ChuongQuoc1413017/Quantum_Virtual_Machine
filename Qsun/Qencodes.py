@@ -65,15 +65,13 @@ def entangle(circuit, entanglement):
     return circuit_layer
 
 """ 
-Updated on Wednesday Dec 10, 2025
+Updated on Thursday Jan 1, 2026
 """
-def YZ_CX_encode(sample, n_layers=2, params=None, random_state=None):
+def YZ_CX_encode(sample, params=None, n_layers=2):
     sample = np.array(sample)
     n_qubit = len(sample)
     expected_params = n_qubit * 2 * n_layers    
     if params is None:
-        if random_state is not None:
-            np.random.seed(random_state)
         params = np.random.uniform(0, 2*np.pi, size=expected_params)
     else:
         params = np.array(params)
@@ -100,17 +98,17 @@ def YZ_CX_encode(sample, n_layers=2, params=None, random_state=None):
     return circuit_initial
 
 def HighDim_encode(sample):
-    features = np.asarray(sample, dtype=float)
-    n_qubit = len(features)
+    sample = np.array(sample)
+    n_qubit = len(sample)
     circuit_initial = Qubit(n_qubit)
     for q in range(n_qubit):
         H(circuit_initial, q)
         i0 = (n_qubit - q + 0) % n_qubit  
         i1 = (n_qubit - q + 1) % n_qubit  
         i2 = (n_qubit - q + 2) % n_qubit  
-        RZ(circuit_initial, q, phi=features[i0])
-        RY(circuit_initial, q, phi=features[i1])
-        RZ(circuit_initial, q, phi=features[i2])
+        RZ(circuit_initial, q, phi=sample[i0])
+        RY(circuit_initial, q, phi=sample[i1])
+        RZ(circuit_initial, q, phi=sample[i2])
     for q in range(0, n_qubit - 1, 2):
         SISWAP(circuit_initial, q, q + 1)
     for q in range(1, n_qubit - 1, 2):
@@ -119,155 +117,159 @@ def HighDim_encode(sample):
         i0 = (n_qubit - q + 0) % n_qubit
         i1 = (n_qubit - q + 1) % n_qubit
         i2 = (n_qubit - q + 2) % n_qubit
-
-        RZ(circuit_initial, q, phi=features[i0])
-        RY(circuit_initial, q, phi=features[i1])
-        RZ(circuit_initial, q, phi=features[i2])
+        RZ(circuit_initial, q, phi=sample[i0])
+        RY(circuit_initial, q, phi=sample[i1])
+        RZ(circuit_initial, q, phi=sample[i2])
 
     return circuit_initial
 
-def HZY_CZ_encode(sample, params=None, num_qubits=4, num_layers=2, closed=True):
-    features = np.asarray(sample, dtype=float)
-    num_features = len(features)
-    feature_vector = np.array([features[i % num_features] for i in range(num_qubits)])
-    params_per_layer = num_qubits
-    if num_qubits > 2:
-        params_per_layer += num_qubits if closed else (num_qubits - 1)
-    total_params = params_per_layer * num_layers
+def HZY_CZ_encode(sample, params=None, n_layers=2, closed=True):
+    sample = np.array(sample)
+    n_qubit = len(sample)
+    feature_vector = np.array([sample[i % n_qubit] for i in range(n_qubit)])
+    params_per_layer = n_qubit
+    if n_qubit > 2:
+        params_per_layer += n_qubit if closed else (n_qubit - 1)
+    total_params = params_per_layer * n_layers
     if params is None:
         params = np.random.rand(total_params)
     else:
         params = np.asarray(params, dtype=float)
         if len(params) < total_params:
             raise ValueError(f"Need {total_params} params, got {len(params)}")
-    circuit_initial = Qubit(num_qubits)
+    circuit_initial = Qubit(n_qubit)
     param_idx = 0
-    for q in range(num_qubits):
+    for q in range(n_qubit):
         H(circuit_initial, q)
-    for layer in range(num_layers):
-        for q in range(num_qubits):
+    for layer in range(n_layers):
+        for q in range(n_qubit):
             RZ(circuit_initial, q, feature_vector[q])
-        for q in range(num_qubits):
+        for q in range(n_qubit):
             RY(circuit_initial, q, params[param_idx])
             param_idx += 1    
-        if num_qubits > 2:
-            istop = num_qubits if closed else (num_qubits - 1)
+        if n_qubit > 2:
+            istop = n_qubit if closed else (n_qubit - 1)
             for i in range(istop):
-                CRZ(circuit_initial, i, (i + 1) % num_qubits, phi=params[param_idx])
+                CRZ(circuit_initial, i, (i + 1) % n_qubit, phi=params[param_idx])
                 param_idx += 1
     return circuit_initial
 
-def Chebyshev_encode(sample, num_qubits, num_layers=2):
-    features = np.asarray(sample, dtype=float)
-    circuit_initial = Qubit(num_qubits)
-    crz_params_per_layer = num_qubits  
+def Chebyshev_encode(sample, params=None, n_layers=2):
+    sample = np.array(sample)
+    n_qubit = len(sample)
+    circuit_initial = Qubit(n_qubit)
+    crz_params_per_layer = n_qubit  
     total_num_params = (
-        num_qubits + 
-        num_layers * (num_qubits + crz_params_per_layer) + 
-        num_qubits  
-    )
-    params = np.random.uniform(0, np.pi, size=total_num_params)
+        n_qubit + n_layers * (n_qubit + crz_params_per_layer) + n_qubit)
+    if params is None:
+        params = np.random.uniform(0, np.pi, size=total_num_params)
+    else: 
+        params = np.asarray(params, dtype=float)
     idx = 0
-    for q in range(num_qubits):
+    for q in range(n_qubit):
         RY(circuit_initial, q, params[idx])
         idx += 1
-    for layer in range(num_layers):
-        for q in range(num_qubits):
-            angle = params[idx] * np.arccos(np.clip(features[q], -1, 1))
+    for layer in range(n_layers):
+        for q in range(n_qubit):
+            angle = params[idx] * np.arccos(np.clip(sample[q], -1, 1))
             RX(circuit_initial, q, angle)
             idx += 1
-        for q in range(0, num_qubits - 1, 2):
+        for q in range(0, n_qubit - 1, 2):
             CRZ(circuit_initial, q, q + 1, phi=params[idx])
             idx += 1
-        for q in range(1, num_qubits - 1, 2):
+        for q in range(1, n_qubit - 1, 2):
             CRZ(circuit_initial, q, q + 1, phi=params[idx])
             idx += 1
-        CRZ(circuit_initial, num_qubits - 1, 0, phi=params[idx])
+        CRZ(circuit_initial, n_qubit - 1, 0, phi=params[idx])
         idx += 1
 
-    for q in range(num_qubits):
+    for q in range(n_qubit):
         RY(circuit_initial, q, params[idx])
         idx += 1
     
     return circuit_initial
 
-def ParamZFeatureMap_encode(sample, num_layers=2):
-    features = np.asarray(sample, dtype=float)
-    num_qubits = len(features)
-    circuit_initial = Qubit(num_qubits)
-    num_params = num_layers * num_qubits
-    params = np.random.uniform(0, np.pi, size=num_params)
+def ParamZFeatureMap_encode(sample, params=None, n_layers=2):
+    sample = np.array(sample)
+    n_qubit = len(sample)
+    circuit_initial = Qubit(n_qubit)
+    num_params = n_layers * n_qubit
+    if params is None:
+        params = np.random.uniform(0, np.pi, size=num_params)
+    else: 
+        params = np.asarray(params, dtype=float)
     idx = 0
-    for layer in range(num_layers):
-        for q in range(num_qubits):
+    for layer in range(n_layers):
+        for q in range(n_qubit):
             H(circuit_initial, q)
-            Phase(circuit_initial, q, phi=params[idx] * features[q])
+            Phase(circuit_initial, q, phi=params[idx] * sample[q])
             idx += 1
-        for q in range(0, num_qubits - 1, 1):
+        for q in range(0, n_qubit - 1, 1):
             CNOT(circuit_initial, q, q + 1)
     
     return circuit_initial
 
 def SeparableRXEncoding_encode(sample):
-    features = np.asarray(sample, dtype=float)
-    num_qubits = len(features)
-    circuit_initial = Qubit(num_qubits)
-    for q in range(num_qubits):
-        RX(circuit_initial, q, features[q])
-        RX(circuit_initial, q, features[q])
+    sample = np.array(sample)
+    n_qubit = len(sample)
+    circuit_initial = Qubit(n_qubit)
+    for q in range(n_qubit):
+        RX(circuit_initial, q, sample[q])
+        RX(circuit_initial, q, sample[q])
 
     return circuit_initial
 
-def HardwareEfficientEmbeddingRx_encode(sample, num_layers=2):
-    features = np.asarray(sample, dtype=float)
-    num_qubits = len(features)
-    circuit_initial = Qubit(num_qubits)
-    for layer in range(num_layers):
-        for q in range(num_qubits):
-            RX(circuit_initial, q, phi=features[q])
-        for q in range(0, num_qubits - 1, 1):
+def HardwareEfficientEmbeddingRx_encode(sample, n_layers=2):
+    sample = np.array(sample)
+    n_qubit = len(sample)
+    circuit_initial = Qubit(n_qubit)
+    for layer in range(n_layers):
+        for q in range(n_qubit):
+            RX(circuit_initial, q, phi=sample[q])
+        for q in range(0, n_qubit - 1, 1):
             CNOT(circuit_initial, q, q + 1)
     
     return circuit_initial
 
-def ZFeatureMap_encode(sample, num_layers=2):
-    features = np.asarray(sample, dtype=float)
-    num_qubits = len(features)
-    circuit_initial = Qubit(num_qubits)
-    for layer in range(num_layers):
-        for q in range(num_qubits):
+def ZFeatureMap_encode(sample, n_layers=2):
+    sample = np.array(sample)
+    n_qubit = len(sample)
+    circuit_initial = Qubit(n_qubit)
+    for layer in range(n_layers):
+        for q in range(n_qubit):
             H(circuit_initial, q)
-            Phase(circuit_initial, q, phi=2 * features[q])
+            Phase(circuit_initial, q, phi=2 * sample[q])
     
     return circuit_initial
 
-def ZZFeatureMap_encode(sample, num_layers=2, entanglement="linear"):
-    n_qubits = len(sample)
-    circuit_initial = Qubit(n_qubits)
-    for layer in range(num_layers):
-        for i in range(n_qubits):
+def ZZFeatureMap_encode(sample, n_layers=2, entanglement="linear"):
+    sample = np.array(sample)
+    n_qubit = len(sample)
+    circuit_initial = Qubit(n_qubit)
+    for layer in range(n_layers):
+        for i in range(n_qubit):
             H(circuit_initial, i)
-        for i in range(n_qubits):
+        for i in range(n_qubit):
             Phase(circuit_initial, i, 2.0 * sample[i])
         if entanglement == "linear":
-            for i in range(n_qubits - 1):
+            for i in range(n_qubit - 1):
                 angle = 2.0 * (np.pi - sample[i]) * (np.pi - sample[i+1])
                 CNOT(circuit_initial, i, i+1)
                 Phase(circuit_initial, i+1, angle)
                 CNOT(circuit_initial, i, i+1)
         elif entanglement == "circular":
-            for i in range(n_qubits - 1):
+            for i in range(n_qubit - 1):
                 angle = 2.0 * (np.pi - sample[i]) * (np.pi - sample[i+1])
                 CNOT(circuit_initial, i, i+1)
                 Phase(circuit_initial, i+1, angle)
                 CNOT(circuit_initial, i, i+1)
             angle = 2.0 * (np.pi - sample[-1]) * (np.pi - sample[0])
-            CNOT(circuit_initial, n_qubits-1, 0)
+            CNOT(circuit_initial, n_qubit-1, 0)
             Phase(circuit_initial, 0, angle)
-            CNOT(circuit_initial, n_qubits-1, 0)
+            CNOT(circuit_initial, n_qubit-1, 0)
         elif entanglement == "full":
-            for i in range(n_qubits):
-                for j in range(i+1, n_qubits):
+            for i in range(n_qubit):
+                for j in range(i+1, n_qubit):
                     angle = 2.0 * (np.pi - sample[i]) * (np.pi - sample[j])
                     CNOT(circuit_initial, i, j)
                     Phase(circuit_initial, j, angle)
