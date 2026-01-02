@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuantumLab Project Tracking</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-primary: #26242f; --bg-card: rgba(18, 18, 26, 0.95);
+            --border-color: rgba(139, 92, 246, 0.15); --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af; --text-muted: #6b7280;
+            --accent-purple: #6449af; --accent-purple-light: #c4b5fd;
+            --accent-blue: #3b82f6; --accent-blue-light: #93c5fd;
+            --accent-green: #10b981; --accent-green-light: #6ee7b7;
+            --accent-yellow: #f59e0b; --accent-yellow-light: #fcd34d;
+        }
+        body {
+            font-family: 'Space Grotesk', sans-serif; background: var(--bg-primary);
+            color: var(--text-primary); min-height: 100vh;
+            background-image: radial-gradient(ellipse at 20% 0%, rgba(139,92,246,0.08) 0%, transparent 50%);
+        }
+        .container { max-width: 1300px; margin: 0 auto; padding: 30px 24px; }
+        .header { text-align: center; margin-bottom: 32px; }
+        .header h1 {
+            font-size: 28px; font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-purple-light), var(--accent-blue-light));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .header p { color: var(--text-muted); font-size: 14px; margin-top: 8px; }
+        .tab-nav {
+            display: flex; gap: 8px; margin-bottom: 24px; background: var(--bg-card);
+            padding: 8px; border-radius: 16px; border: 1px solid var(--border-color);
+        }
+        .tab-btn {
+            flex: 1; padding: 16px 20px; background: transparent; border: none;
+            border-radius: 12px; color: var(--text-secondary); cursor: pointer;
+            font-size: 15px; font-weight: 500; font-family: inherit;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: all 0.3s ease;
+        }
+        .tab-btn:hover { background: rgba(139,92,246,0.1); color: var(--text-primary); }
+        .tab-btn.active {
+            background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(59,130,246,0.2));
+            color: var(--accent-purple-light); font-weight: 600;
+            box-shadow: 0 4px 15px rgba(139,92,246,0.2);
+        }
+        .tab-content { display: none; animation: fadeIn 0.4s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .card {
+            background: var(--bg-card); border-radius: 20px; padding: 28px;
+            border: 1px solid var(--border-color); margin-bottom: 20px;
+        }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .card-title { font-size: 22px; font-weight: 700; }
+        .card-subtitle { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+        .status-badge {
+            padding: 6px 14px; border-radius: 20px; font-size: 11px;
+            font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+            cursor: pointer; transition: all 0.2s ease;
+        }
+        .status-badge:hover { transform: scale(1.05); }
+        .status-completed { background: rgba(16,185,129,0.15); color: var(--accent-green-light); border: 1px solid rgba(16,185,129,0.3); }
+        .status-in-progress { background: rgba(245,158,11,0.15); color: var(--accent-yellow-light); border: 1px solid rgba(245,158,11,0.3); }
+        .status-pending { background: rgba(107,114,128,0.15); color: var(--text-secondary); border: 1px solid rgba(107,114,128,0.3); }
+        
+        /* Editable Progress Bar */
+        .progress-container { position: relative; margin: 8px 0; }
+        .progress-bar {
+            width: 100%; height: 12px; background: rgba(255,255,255,0.08); border-radius: 6px;
+            overflow: hidden; cursor: pointer; position: relative;
+            transition: height 0.2s ease;
+        }
+        .progress-bar:hover { height: 16px; }
+        .progress-bar::after {
+            content: 'Click để thay đổi'; position: absolute; right: 8px; top: 50%;
+            transform: translateY(-50%); font-size: 9px; color: rgba(255,255,255,0.3);
+            opacity: 0; transition: opacity 0.2s ease; pointer-events: none;
+        }
+        .progress-bar:hover::after { opacity: 1; }
+        .progress-fill {
+            height: 100%; border-radius: 6px; transition: width 0.3s ease, background 0.3s ease;
+            position: relative;
+        }
+        .progress-fill.green { background: linear-gradient(90deg, var(--accent-green), #34d399); }
+        .progress-fill.yellow { background: linear-gradient(90deg, var(--accent-yellow), #fbbf24); }
+        .progress-fill.red { background: linear-gradient(90deg, #ef4444, #f87171); }
+        .progress-fill.purple { background: linear-gradient(90deg, var(--accent-purple), #a78bfa); }
+        
+        .progress-text {
+            color: var(--text-muted); font-size: 13px; margin-top: 8px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .progress-text input {
+            width: 60px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px; color: var(--text-primary); font-size: 13px; padding: 4px 8px;
+            font-family: 'JetBrains Mono', monospace; text-align: center;
+        }
+        .progress-text input:focus { outline: none; border-color: var(--accent-purple); }
+        
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .overview-card {
+            padding: 24px; border-radius: 16px; transition: all 0.3s ease; cursor: pointer;
+        }
+        .overview-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+        .overview-card.green { background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(16,185,129,0.04)); border: 1px solid rgba(16,185,129,0.25); }
+        .overview-card.yellow { background: linear-gradient(135deg, rgba(245,158,11,0.12), rgba(245,158,11,0.04)); border: 1px solid rgba(245,158,11,0.25); }
+        .overview-card.red { background: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(239,68,68,0.04)); border: 1px solid rgba(239,68,68,0.25); }
+        .overview-card h3 { font-size: 16px; margin-bottom: 12px; }
+        .stat-card { text-align: center; padding: 24px; border-radius: 16px; }
+        .stat-card .number { font-size: 42px; font-weight: 700; margin-bottom: 8px; }
+        .stat-card .label { color: var(--text-muted); font-size: 13px; }
+        .component-title { font-size: 16px; font-weight: 600; color: var(--accent-purple-light); }
+        .component-file { font-size: 12px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; margin-top: 4px; }
+        .component-desc { color: var(--text-secondary); font-size: 14px; line-height: 1.6; margin-bottom: 16px; }
+        .tag { display: inline-block; padding: 6px 12px; border-radius: 6px; font-size: 12px; margin: 3px; }
+        .tag-purple { background: rgba(139,92,246,0.15); color: var(--accent-purple-light); border: 1px solid rgba(139,92,246,0.3); }
+        .tag-blue { background: rgba(59,130,246,0.15); color: var(--accent-blue-light); border: 1px solid rgba(59,130,246,0.3); }
+        .tag-green { background: rgba(16,185,129,0.15); color: var(--accent-green-light); border: 1px solid rgba(16,185,129,0.3); }
+        .tag-yellow { background: rgba(245,158,11,0.15); color: var(--accent-yellow-light); border: 1px solid rgba(245,158,11,0.3); }
+        .tag-gray { background: rgba(255,255,255,0.05); color: var(--text-secondary); }
+        .dataset-item { padding: 12px 16px; background: rgba(139,92,246,0.08); border-radius: 10px; border: 1px solid rgba(139,92,246,0.15); }
+        .dataset-name { font-weight: 600; color: var(--accent-purple-light); font-size: 14px; }
+        .dataset-info { color: var(--text-muted); font-size: 12px; margin-top: 4px; }
+        .ansatz-item { padding: 14px; border-radius: 10px; text-align: center; }
+        .ansatz-item.param { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); }
+        .ansatz-item.fixed { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.25); }
+        .ansatz-name { font-weight: 600; font-size: 13px; }
+        .ansatz-item.param .ansatz-name { color: var(--accent-yellow-light); }
+        .ansatz-item.fixed .ansatz-name { color: var(--accent-blue-light); }
+        .ansatz-type { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+        .model-item { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+        .model-badge { padding: 6px 12px; background: rgba(16,185,129,0.15); color: var(--accent-green-light); border-radius: 6px; font-size: 12px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+        .model-desc { color: var(--text-secondary); font-size: 13px; }
+        .metric-category { padding: 18px; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
+        .metric-category-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .metric-category-name { font-weight: 600; font-size: 14px; }
+        .metric-count { padding: 4px 10px; background: rgba(59,130,246,0.2); color: var(--accent-blue-light); border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .metric-list { list-style: none; }
+        .metric-list li { color: var(--text-muted); font-size: 12px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .metric-list li:last-child { border-bottom: none; }
+        .quantum-metric-box { padding: 18px; background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(139,92,246,0.05)); border-radius: 12px; border: 1px solid rgba(139,92,246,0.2); margin-bottom: 12px; }
+        .quantum-metric-name { font-weight: 600; color: var(--accent-purple-light); font-size: 15px; margin-bottom: 6px; }
+        .quantum-metric-desc { color: var(--text-secondary); font-size: 13px; margin-bottom: 12px; }
+        .output-tag { display: inline-block; padding: 5px 10px; background: rgba(0,0,0,0.3); border-radius: 5px; color: var(--accent-purple-light); font-size: 11px; font-family: 'JetBrains Mono', monospace; margin: 3px; }
+        .pipeline { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 20px 0; }
+        .pipeline-step { flex: 1; padding: 18px 14px; border-radius: 14px; text-align: center; font-size: 13px; font-weight: 500; line-height: 1.4; }
+        .pipeline-step.completed { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.25); color: var(--accent-green-light); }
+        .pipeline-step.in-progress { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); color: var(--accent-yellow-light); }
+        .pipeline-step.pending { background: rgba(107,114,128,0.1); border: 1px solid rgba(107,114,128,0.25); color: var(--text-muted); }
+        .pipeline-arrow { color: var(--text-muted); font-size: 20px; flex-shrink: 0; }
+        .formula-box { padding: 20px; background: rgba(0,0,0,0.35); border-radius: 12px; font-family: 'JetBrains Mono', monospace; margin-bottom: 16px; }
+        .formula { color: var(--accent-yellow-light); font-size: 16px; }
+        .next-step { padding: 14px 18px; background: rgba(245,158,11,0.08); border-radius: 10px; border: 1px solid rgba(245,158,11,0.2); display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+        .step-number { width: 28px; height: 28px; background: rgba(245,158,11,0.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--accent-yellow-light); font-size: 13px; font-weight: 600; }
+        .step-text { color: var(--accent-yellow-light); font-size: 14px; }
+        .desc-text { color: var(--text-secondary); font-size: 15px; line-height: 1.7; margin-bottom: 16px; }
+        .desc-text strong { color: var(--accent-purple-light); }
+        .info-list { list-style: none; margin: 16px 0; }
+        .info-list li { color: var(--text-secondary); font-size: 14px; padding: 8px 0 8px 24px; position: relative; }
+        .info-list li::before { content: "→"; position: absolute; left: 0; color: var(--accent-purple-light); }
+        .result-box { padding: 18px; background: rgba(16,185,129,0.1); border-radius: 12px; border: 1px solid rgba(16,185,129,0.2); margin-top: 16px; }
+        .result-box h5 { color: var(--accent-green-light); margin-bottom: 10px; font-size: 14px; }
+        .result-box p { color: var(--text-secondary); font-size: 14px; margin: 4px 0; }
+        .result-box strong { color: var(--accent-green-light); }
+        .result-box .meta { color: var(--text-muted); font-size: 12px; margin-top: 8px; }
+        .section-divider { display: flex; align-items: center; gap: 16px; margin: 24px 0; }
+        .section-divider span { color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+        .section-divider::before, .section-divider::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,92,246,0.3), transparent); }
+        
+        /* Edit hint */
+        .edit-hint {
+            background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3);
+            border-radius: 10px; padding: 12px 16px; margin-bottom: 20px;
+            display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--accent-purple-light);
+        }
+        .edit-hint .icon { font-size: 18px; }
+        
+        /* Save notification */
+        .save-notification {
+            position: fixed; bottom: 24px; right: 24px; background: var(--accent-green);
+            color: white; padding: 12px 20px; border-radius: 10px; font-size: 14px;
+            font-weight: 500; opacity: 0; transform: translateY(20px);
+            transition: all 0.3s ease; z-index: 1000;
+        }
+        .save-notification.show { opacity: 1; transform: translateY(0); }
+        
+        @media (max-width: 900px) {
+            .tab-nav { flex-wrap: wrap; }
+            .tab-btn { flex: 1 1 45%; }
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            .pipeline { flex-direction: column; }
+            .pipeline-arrow { transform: rotate(90deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>⚛️ Quantum Kernel Recommendation System</h1>
+        </header>
+        <nav class="tab-nav">
+            <button class="tab-btn active" data-tab="overview"><span>📋</span> Overview</button>
+            <button class="tab-btn" data-tab="quantum-learning"><span>⚛️</span> Quantum Learning</button>
+            <button class="tab-btn" data-tab="data-complexity"><span>📊</span> Data Complexity</button>
+            <button class="tab-btn" data-tab="synthesis"><span>🗂️</span> Synthesis Dataset</button>
+        </nav>
+
+        <!-- OVERVIEW -->
+        <div id="overview" class="tab-content active">
+            
+            <div class="card">
+                <h2 class="card-title">🎯 Mục tiêu Project</h2>
+                <p class="desc-text" style="margin-top:16px"><strong>Mục tiêu:</strong> Xây dựng hệ thống tự động đề xuất quantum kernel phù hợp nhất cho dataset cụ thể.</p>
+                <p class="desc-text"><strong>Ý tưởng cốt lõi:</strong> Học cách "dự đoán" kernel tốt nhất thông qua các metric đo độ phức tạp Classical-Quantum.</p>
+            </div>
+            
+            <div class="section-divider"><span>Module Progress</span></div>
+            
+            <div class="grid-3">
+                <div class="overview-card" id="card-quantum" onclick="switchTab('quantum-learning')">
+                    <div class="card-header" style="margin-bottom:12px">
+                        <h3>⚛️ Quantum Learning</h3>
+                        <span class="status-badge" id="status-quantum" data-module="quantum">Hoàn thành</span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar" onclick="event.stopPropagation()" data-module="quantum">
+                            <div class="progress-fill" id="progress-quantum"></div>
+                        </div>
+                    </div>
+                    <div class="progress-text">
+                        <input type="number" id="input-quantum" min="0" max="100" onclick="event.stopPropagation()" data-module="quantum">
+                        <span>% hoàn thành</span>
+                    </div>
+                </div>
+
+                <div class="overview-card" id="card-complexity" onclick="switchTab('data-complexity')">
+                    <div class="card-header" style="margin-bottom:12px">
+                        <h3>📊 Data Complexity</h3>
+                        <span class="status-badge" id="status-complexity" data-module="complexity">Hoàn thành</span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar" onclick="event.stopPropagation()" data-module="complexity">
+                            <div class="progress-fill" id="progress-complexity"></div>
+                        </div>
+                    </div>
+                    <div class="progress-text">
+                        <input type="number" id="input-complexity" min="0" max="100" onclick="event.stopPropagation()" data-module="complexity">
+                        <span>% hoàn thành</span>
+                    </div>
+                </div>
+
+                <div class="overview-card" id="card-synthesis" onclick="switchTab('synthesis')">
+                    <div class="card-header" style="margin-bottom:12px">
+                        <h3>🗂️ Synthesis Dataset</h3>
+                        <span class="status-badge" id="status-synthesis" data-module="synthesis">Đang thực hiện</span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar" onclick="event.stopPropagation()" data-module="synthesis">
+                            <div class="progress-fill" id="progress-synthesis"></div>
+                        </div>
+                    </div>
+                    <div class="progress-text">
+                        <input type="number" id="input-synthesis" min="0" max="100" onclick="event.stopPropagation()" data-module="synthesis">
+                        <span>% hoàn thành</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-divider"><span>Pipeline Tổng Thể</span></div>
+            <div class="card">
+                <div class="pipeline">
+                    <div class="pipeline-step" id="pipe-database">📁 Database<br>(6 Datasets)</div>
+                    <span class="pipeline-arrow">→</span>
+                    <div class="pipeline-step" id="pipe-quantum">⚛️ Quantum Learning<br>(9 Ansatz × 3 Models)</div>
+                    <span class="pipeline-arrow">→</span>
+                    <div class="pipeline-step" id="pipe-complexity">📊 Complexity Metrics<br>(24 Features)</div>
+                    <span class="pipeline-arrow">→</span>
+                    <div class="pipeline-step" id="pipe-synthesis">🗂️ Synthesis Dataset<br>(6×24 → 9 Labels)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUANTUM LEARNING -->
+        <div id="quantum-learning" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">⚛️ Quantum Learning Procedure</h2>
+                    <span class="status-badge" id="status-quantum-detail">Hoàn thành</span>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar" data-module="quantum">
+                        <div class="progress-fill" id="progress-quantum-detail"></div>
+                    </div>
+                </div>
+                <p class="desc-text" style="margin-top:16px">Xây dựng dữ liệu huấn luyện thông qua các thí nghiệm học máy với quantum kernels.</p>
+            </div>
+            <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+                    <div><div class="component-title">📁 load_datasets</div><div class="component-file">load_datasets.py</div></div>
+                    <span class="status-badge status-completed">Hoàn thành</span>
+                </div>
+                <p class="component-desc">Load và tiền xử lý 6 datasets cho bài toán Classification</p>
+                <h5 style="color:var(--text-primary);font-size:14px;margin-bottom:12px">Datasets:</h5>
+                <div class="grid-3">
+                    <div class="dataset-item"><div class="dataset-name">Circle</div><div class="dataset-info">80 samples, 2 features</div></div>
+                    <div class="dataset-item"><div class="dataset-name">Moons</div><div class="dataset-info">80 samples, 2 features</div></div>
+                    <div class="dataset-item"><div class="dataset-name">Iris</div><div class="dataset-info">80 samples, 4 features</div></div>
+                    <div class="dataset-item"><div class="dataset-name">Pima</div><div class="dataset-info">613 samples, 8 features</div></div>
+                    <div class="dataset-item"><div class="dataset-name">Banknote</div><div class="dataset-info">1097 samples, 4 features</div></div>
+                    <div class="dataset-item"><div class="dataset-name">Haberman</div><div class="dataset-info">244 samples, 3 features</div></div>
+                </div>
+                <h5 style="color:var(--text-primary);font-size:14px;margin:20px 0 12px">Preprocessing:</h5>
+                <div><span class="tag tag-gray">MinMaxScaler → [0, π]</span><span class="tag tag-gray">Train-Test split (80-20)</span></div>
+            </div>
+            <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+                    <div><div class="component-title">🤖 kernel_evaluation</div><div class="component-file">kernel_evaluation.py</div></div>
+                    <span class="status-badge status-completed">Hoàn thành</span>
+                </div>
+                <p class="component-desc">Đánh giá quantum kernels với Classical Machine Learning models</p>
+                <h5 style="color:var(--text-primary);font-size:14px;margin-bottom:12px">ML Models:</h5>
+                <div class="model-item"><span class="model-badge">QSVM</span><span class="model-desc">Quantum Support Vector Machine</span></div>
+                <div class="model-item"><span class="model-badge">QGPC</span><span class="model-desc">Quantum Gaussian Process Classifier</span></div>
+                <div class="model-item"><span class="model-badge">QKR</span><span class="model-desc">Quantum Kernel Ridge Classifier</span></div>
+            </div>
+            <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+                    <div><div class="component-title">🔮 9 Quantum Ansatzes</div><div class="component-file">Qencodes.py</div></div>
+                    <span class="status-badge status-completed">Hoàn thành</span>
+                </div>
+                <div class="grid-3">
+                    <div class="ansatz-item param"><div class="ansatz-name">YZ_CX</div><div class="ansatz-type">Parameterized</div></div>
+                    <div class="ansatz-item fixed"><div class="ansatz-name">HighDim</div><div class="ansatz-type">Fixed</div></div>
+                    <div class="ansatz-item param"><div class="ansatz-name">HZY_CZ</div><div class="ansatz-type">Parameterized</div></div>
+                    <div class="ansatz-item fixed"><div class="ansatz-name">Chebyshev</div><div class="ansatz-type">Fixed • Layers</div></div>
+                    <div class="ansatz-item fixed"><div class="ansatz-name">ParamZFeatureMap</div><div class="ansatz-type">Fixed • Layers</div></div>
+                    <div class="ansatz-item fixed"><div class="ansatz-name">SeparableRX</div><div class="ansatz-type">Fixed</div></div>
+                    <div class="ansatz-item fixed"><div class="ansatz-name">HardwareEfficientRx</div><div class="ansatz-type">Fixed • Layers</div></div>
+                    <div class="ansatz-item fixed"><div class="ansatz-name">ZFeatureMap</div><div class="ansatz-type">Fixed • Layers</div></div>
+                    <div class="ansatz-item fixed"><div class="ansatz-name">ZZFeatureMap</div><div class="ansatz-type">Fixed • Layers</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DATA COMPLEXITY -->
+        <div id="data-complexity" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">📊 Data Complexity Procedure</h2>
+                    <span class="status-badge" id="status-complexity-detail">Hoàn thành</span>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar" data-module="complexity">
+                        <div class="progress-fill" id="progress-complexity-detail"></div>
+                    </div>
+                </div>
+                <p style="color:var(--accent-purple-light);font-size:22px;margin-top:16px;font-weight:600">Tổng số: 24 metrics (features)</p>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3 class="card-subtitle" style="margin-bottom:0">📈 Classical Metrics (Problexity)</h3><span class="tag tag-blue" style="font-size:14px;font-weight:600">22 metrics</span></div>
+                <p class="component-desc">Thư viện Problexity - độ đo phức tạp dữ liệu Classification</p>
+                <div class="grid-2">
+                    <div class="metric-category">
+                        <div class="metric-category-header"><span class="metric-category-name">Feature-based (F)</span><span class="metric-count">4</span></div>
+                        <ul class="metric-list"><li>F1 - Max Fisher's Discriminant</li><li>F1v - Directional Fisher</li><li>F2 - Volume of Overlap</li><li>F3/F4 - Feature Efficiency</li></ul>
+                    </div>
+                    <div class="metric-category">
+                        <div class="metric-category-header"><span class="metric-category-name">Linearity (L)</span><span class="metric-count">3</span></div>
+                        <ul class="metric-list"><li>L1 - Sum of Error Distance</li><li>L2 - Error Rate Linear</li><li>L3 - Non-linearity</li></ul>
+                    </div>
+                    <div class="metric-category">
+                        <div class="metric-category-header"><span class="metric-category-name">Neighborhood (N)</span><span class="metric-count">4</span></div>
+                        <ul class="metric-list"><li>N1 - Fraction on Boundary</li><li>N2 - Ratio Distances</li><li>N3 - Error Rate 1-NN</li><li>N4 - Non-linearity 1-NN</li></ul>
+                    </div>
+                    <div class="metric-category">
+                        <div class="metric-category-header"><span class="metric-category-name">Network & Others</span><span class="metric-count">11</span></div>
+                        <ul class="metric-list"><li>T1-T4 - Network measures</li><li>C1/C2 - Dimensionality</li><li>Density, CLSCoef, Hubs...</li></ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3 class="card-subtitle" style="margin-bottom:0">🔮 Classical Metrics (Qdata.py)</h3><span class="tag tag-purple" style="font-size:14px;font-weight:600">2+ metrics</span></div>
+                <div class="quantum-metric-box">
+                    <div class="quantum-metric-name">Intrinsic Dimension</div>
+                    <p class="quantum-metric-desc">Return the estimated Intrinsic Dimension using the spectrum of the covariance matrix</p>
+                </div>
+                <div class="quantum-metric-box">
+                    <div class="quantum-metric-name">Kolmogorov Complex</div>
+                    <p class="quantum-metric-desc">Return the estimated Kolmogorov complexity of the dataset</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SYNTHESIS DATASET -->
+        <div id="synthesis" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">🗂️ Synthesis Dataset Construction</h2>
+                    <span class="status-badge" id="status-synthesis-detail">Đang thực hiện</span>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar" data-module="synthesis">
+                        <div class="progress-fill" id="progress-synthesis-detail"></div>
+                    </div>
+                </div>
+                <p class="desc-text" style="margin-top:16px">Xây dựng dataset tổng hợp cho bài toán recommendation.</p>
+            </div>
+            <div class="card">
+                <h3 class="card-subtitle">📋 Dataset Structure</h3>
+                <div class="grid-3">
+                    <div class="stat-card" style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2)">
+                        <div class="number" style="color:var(--accent-blue-light)">6</div><div class="label">Datasets (Rows)</div>
+                    </div>
+                    <div class="stat-card" style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2)">
+                        <div class="number" style="color:var(--accent-purple-light)">24</div><div class="label">Features (Metrics)</div>
+                    </div>
+                    <div class="stat-card" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2)">
+                        <div class="number" style="color:var(--accent-green-light)">9</div><div class="label">Label Classes</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <h3 class="card-subtitle">🏷️ Label Construction</h3>
+                <div class="formula-box"><code class="formula">label = argmax<sub>d</sub>(max<sub>i</sub> f<sub>i</sub>(dataset))</code></div>
+                <ul class="info-list">
+                    <li><strong style="color:var(--accent-purple-light)">d</strong> : 9 quantum kernel/ansatz</li>
+                    <li><strong style="color:var(--accent-purple-light)">i</strong> : 3 ML models (SVM, GPC, KRC)</li>
+                    <li><strong style="color:var(--accent-purple-light)">f<sub>i</sub></strong> : accuracy trung bình trên test set</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3 class="card-subtitle">📝 Next Steps</h3>
+                <div class="next-step"><span class="step-number">1</span><span class="step-text">Finalize feature extraction pipeline</span></div>
+                <div class="next-step"><span class="step-number">2</span><span class="step-text">Generate labels từ best kernel results</span></div>
+                <div class="next-step"><span class="step-number">3</span><span class="step-text">Export synthesis dataset cho NN/QNN training</span></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="save-notification" id="saveNotification">✓ Đã lưu thay đổi</div>
+
+    <script>
+        // Progress data with localStorage persistence
+        const defaultProgress = { quantum: 100, complexity: 100, synthesis: 75 };
+        let progressData = JSON.parse(localStorage.getItem('quantumProgress')) || {...defaultProgress};
+
+        // Initialize
+        function init() {
+            Object.keys(progressData).forEach(module => {
+                updateProgress(module, progressData[module]);
+            });
+            setupEventListeners();
+        }
+
+        // Update progress UI
+        function updateProgress(module, value) {
+            value = Math.max(0, Math.min(100, parseInt(value) || 0));
+            progressData[module] = value;
+            
+            // Update all progress bars for this module
+            const fills = document.querySelectorAll(`#progress-${module}, #progress-${module}-detail`);
+            fills.forEach(fill => {
+                if (fill) {
+                    fill.style.width = value + '%';
+                    fill.className = 'progress-fill ' + getColorClass(value);
+                }
+            });
+            
+            // Update input
+            const input = document.getElementById(`input-${module}`);
+            if (input) input.value = value;
+            
+            // Update status badges
+            const statusText = getStatusText(value);
+            const statusClass = getStatusClass(value);
+            
+            [`status-${module}`, `status-${module}-detail`].forEach(id => {
+                const badge = document.getElementById(id);
+                if (badge) {
+                    badge.textContent = statusText;
+                    badge.className = 'status-badge ' + statusClass;
+                }
+            });
+            
+            // Update card background
+            const card = document.getElementById(`card-${module}`);
+            if (card) {
+                card.className = 'overview-card ' + getCardColorClass(value);
+            }
+            
+            // Update pipeline step
+            const pipeStep = document.getElementById(`pipe-${module}`);
+            if (pipeStep) {
+                pipeStep.className = 'pipeline-step ' + getPipelineClass(value);
+            }
+            
+            // Database is always completed
+            const pipeDb = document.getElementById('pipe-database');
+            if (pipeDb) pipeDb.className = 'pipeline-step completed';
+            
+            // Save to localStorage
+            localStorage.setItem('quantumProgress', JSON.stringify(progressData));
+        }
+
+        function getColorClass(value) {
+            if (value >= 100) return 'green';
+            if (value >= 50) return 'yellow';
+            if (value > 0) return 'red';
+            return 'purple';
+        }
+
+        function getCardColorClass(value) {
+            if (value >= 100) return 'green';
+            if (value >= 50) return 'yellow';
+            return 'red';
+        }
+
+        function getStatusText(value) {
+            if (value >= 100) return 'Hoàn thành';
+            if (value > 0) return 'Đang thực hiện';
+            return 'Chưa bắt đầu';
+        }
+
+        function getStatusClass(value) {
+            if (value >= 100) return 'status-completed';
+            if (value > 0) return 'status-in-progress';
+            return 'status-pending';
+        }
+
+        function getPipelineClass(value) {
+            if (value >= 100) return 'completed';
+            if (value > 0) return 'in-progress';
+            return 'pending';
+        }
+
+        function showSaveNotification() {
+            const notif = document.getElementById('saveNotification');
+            notif.classList.add('show');
+            setTimeout(() => notif.classList.remove('show'), 2000);
+        }
+
+        function setupEventListeners() {
+            // Progress bar click
+            document.querySelectorAll('.progress-bar').forEach(bar => {
+                bar.addEventListener('click', function(e) {
+                    const rect = this.getBoundingClientRect();
+                    const percent = Math.round((e.clientX - rect.left) / rect.width * 100);
+                    const module = this.dataset.module;
+                    if (module) {
+                        updateProgress(module, percent);
+                        showSaveNotification();
+                    }
+                });
+            });
+
+            // Input change
+            document.querySelectorAll('.progress-text input').forEach(input => {
+                input.addEventListener('change', function() {
+                    const module = this.dataset.module;
+                    if (module) {
+                        updateProgress(module, this.value);
+                        showSaveNotification();
+                    }
+                });
+                input.addEventListener('keyup', function(e) {
+                    if (e.key === 'Enter') {
+                        this.blur();
+                    }
+                });
+            });
+        }
+
+        // Tab navigation
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() { switchTab(this.dataset.tab); });
+        });
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tabId);
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.toggle('active', content.id === tabId);
+            });
+        }
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
