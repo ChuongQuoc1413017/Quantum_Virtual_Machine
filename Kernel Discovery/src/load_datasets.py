@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Dict, Tuple, Optional, List
 from dataclasses import dataclass
 
-from sklearn.datasets import load_iris, make_moons, make_circles
+from sklearn.datasets import load_iris, make_moons, make_circles, make_blobs
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
@@ -52,6 +52,19 @@ class DatasetLoader:
             random_state=self.random_state
         )
         self._add_dataset("Circle", X, y, "sklearn.make_circles")
+        return X, y
+    
+    def load_blobs(self, n_samples: int = 1000, n_features: int = 2,
+                centers: int = 2, cluster_std: float = 0.5) -> Tuple[np.ndarray, np.ndarray]:
+        X, y = make_blobs(
+            n_samples=n_samples,
+            n_features=n_features, 
+            centers=centers,       
+            cluster_std=cluster_std,  
+            random_state=self.random_state
+        )
+        name = f"Blobs_F{n_features}C{centers}"
+        self._add_dataset(name, X, y, f"sklearn.make_blobs(f={n_features},c={centers})")
         return X, y
     
     def load_moons(self, n_samples: int = 100, 
@@ -108,6 +121,25 @@ class DatasetLoader:
         return X, y
     
     def load_all(self, verbose: bool = True) -> Dict[str, Tuple[np.ndarray, np.ndarray]]:
+        
+        blobs_configs = [
+            (2, 2), (2, 3), (2, 4),  # 2 features
+            (4, 2), (4, 3), (4, 4),  # 4 features
+        ]
+        for n_features, centers in blobs_configs:
+            name = f"Blobs_F{n_features}C{centers}"
+            try:
+                X, y = make_blobs(
+                    n_samples=1000,
+                    n_features=n_features,
+                    centers=centers,
+                    cluster_std=0.5,
+                    random_state=self.random_state
+                )
+                self._add_dataset(name, X, y, f"sklearn.make_blobs(f={n_features},c={centers})")
+            except Exception as e:
+                if verbose:
+                    print(f"  Skipped {name}: {e}")
 
         loaders = [
             ("Circle", self.load_circle),
@@ -117,7 +149,7 @@ class DatasetLoader:
             ("Banknote", self.load_banknote),
             ("Haberman", self.load_haberman),
         ]
-        
+
         for name, loader in loaders:
             try:
                 if verbose:

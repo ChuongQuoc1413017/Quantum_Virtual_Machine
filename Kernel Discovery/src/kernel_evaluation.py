@@ -1,14 +1,11 @@
 import numpy as np
+import pandas as pd
+
 from typing import Dict, Tuple, List
 from dataclasses import dataclass
-
 from sklearn.svm import SVC
-from sklearn.gaussian_process import GaussianProcessClassifier
-from sklearn.gaussian_process.kernels import Kernel
-from sklearn.kernel_ridge import KernelRidge
 from sklearn.metrics import accuracy_score
 
-import pandas as pd
 
 @dataclass
 class KernelEvaluation:
@@ -35,37 +32,8 @@ class QSVM:
     def score(self, K: np.ndarray, y: np.ndarray) -> float:
         return accuracy_score(y, self.predict(K))
     
-class QKR:
-    def __init__(self, alpha: float = 1.0):
-        self.alpha = alpha
-        self.dual_coef_ = None
-        self.classes_ = None
-        self.y_train_encoded = None
-    
-    def fit(self, K_train: np.ndarray, y_train: np.ndarray):
-        self.classes_ = np.unique(y_train)
-        n_classes = len(self.classes_)
-        n_samples = len(y_train)
-        
-        self.y_train_encoded = np.zeros((n_samples, n_classes))
-        for i, cls in enumerate(self.classes_):
-            self.y_train_encoded[y_train == cls, i] = 1
-        
-        K_reg = K_train + self.alpha * np.eye(n_samples)
-        self.dual_coef_ = np.linalg.solve(K_reg, self.y_train_encoded)
-        
-        return self
-    
-    def predict(self, K_test: np.ndarray) -> np.ndarray:
-        scores = K_test @ self.dual_coef_
-        return self.classes_[np.argmax(scores, axis=1)]
-    
-    def score(self, K: np.ndarray, y: np.ndarray) -> float:
-        return accuracy_score(y, self.predict(K))
-    
 MODEL_REGISTER = {
     "SVM": QSVM,
-    "KRC": QKR,
 }
 
 def evaluate_kernel(K_train: np.ndarray, K_test: np.ndarray,
